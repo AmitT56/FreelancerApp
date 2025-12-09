@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: freelancer-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount app directory for hot reload - changes reflect immediately
+      - ./backend/app:/app/app
+      - ./backend/requirements.txt:/app/requirements.txt
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - freelancer-network
+    # Watch for file changes in the app directory
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: freelancer-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      # Mount all source files for hot reload - changes reflect immediately
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/tsconfig.node.json:/app/tsconfig.node.json
+      - ./frontend/package.json:/app/package.json
+      # Exclude node_modules from volume mount (use container's installed version)
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:8000
+    restart: unless-stopped
+    networks:
+      - freelancer-network
+    depends_on:
+      - backend
+
+networks:
+  freelancer-network:
+    driver: bridge
+
