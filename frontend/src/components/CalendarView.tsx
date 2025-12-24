@@ -5,7 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import api from '../api';
 
-export default function CalendarView() {
+export default function CalendarView({ refreshTrigger, isPublic }: { refreshTrigger?: number; isPublic?: boolean }) {
   const [events, setEvents] = useState<any[]>([]);
 
   useEffect(() => {
@@ -14,7 +14,9 @@ export default function CalendarView() {
         const now = new Date();
         const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
         const end = new Date(now.getFullYear(), now.getMonth() + 2, 1).toISOString();
-        const res = await api.get('/events/', { params: { start, end } });
+        // Use public endpoint for public view, protected endpoint for authenticated users
+        const endpoint = isPublic ? '/events/public' : '/events/';
+        const res = await api.get(endpoint, { params: { start, end } });
         setEvents(res.data.map((e: any) => ({ 
           id: String(e.id), 
           title: e.title, 
@@ -27,7 +29,7 @@ export default function CalendarView() {
         setEvents([]);
       }
     })();
-  }, []);
+  }, [refreshTrigger, isPublic]);
 
   return (
     <div>

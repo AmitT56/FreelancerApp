@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import api from '../api';
 
+interface LandingFormProps {
+  onClientSubmitted?: () => void;
+}
 
-export default function LandingForm() {
+export default function LandingForm({ onClientSubmitted }: LandingFormProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -19,6 +22,10 @@ export default function LandingForm() {
       await api.post('/clients/', payload);
       setStatus('sent');
       setName(''); setEmail(''); setPhone(''); setNotes(''); setRequestedStart('');
+      // Notify parent component to refresh client list and calendar
+      if (onClientSubmitted) {
+        onClientSubmitted();
+      }
     } catch (err: any) {
       console.error(err);
       setStatus('error');
